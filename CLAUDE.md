@@ -13,8 +13,9 @@
 ## Build phases (work in this order — BUILD_SPEC §13)
 
 - **P0 — Scaffold** ✅ Next.js + TS + tooling, repo structure, CLAUDE.md, CI, canonical `schema.sql`, config placeholders. (No reward math yet.)
-- **P1 — Engine first:** implement `score.ts` + `score.test.ts`; pass all §8 acceptance tests against demo data **before any UI**.
-  - Golden numbers to hit: `netDeskRevenue = 42,420` · `pool = 4,242` · ranking `Mehdi > Omar > Sara > Lena > Niki` · `Niki conductFinal = 0.50`.
+- **P1 — Engine first** ✅ pure `score.ts` + `score.test.ts` green (14 tests).
+  - ECONOMICS supersede the prototype: value metric = `net_deposit` (deposit − withdrawal, may be negative, not floored at agent level; pool floored at desk level), attribution = point-in-time `manager_email`, both indices MIN-MAX normalized, UNAPPROVED settings ⇒ `authorized:false` + PROVISIONAL disclaimer.
+  - Golden numbers locked: `netDeskValue = 34,000` · `pool = 3,400` · ranking `lida > hossein > lara > mahya > armin` · payouts `1331.68 / 943.69 / 768.44 / 294.43 / 61.76` · `armin conductFinal = 0.50`. Fixture: `tests/fixtures/demo_netdeposit.ts` (SYNTHETIC).
 - **P2 — DB + ingestion:** schema, CSV parse/validate/upsert, templates, audit log.
 - **P3 — Auth + dashboards:** roles, RLS, the six manager views + `/me`, recompute wiring.
 - **P4 — Quarterly close + holdback ledger:** snapshots, lock, release/clawback, history.

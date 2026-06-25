@@ -59,19 +59,21 @@ export const DEFAULT_OKRS: OkrTargets = {
 /** What counts as the value the desk is rewarded on. */
 export interface ValueMetricConfig {
   /**
-   * Which revenue field the pool is built from. v1 = net_company_revenue
-   * (spread + commission + swap, net of reversals). Deposits are never the base.
+   * Which field the pool is built from. P1 ECONOMICS locks this to `net_deposit`
+   * (deposit − withdrawal) per client-month — NOT net company revenue. This
+   * supersedes the prototype/BUILD_SPEC. Negative net-deposit is real signal and
+   * is not floored at the agent level (only the desk-wide pool is floored).
    */
-  source: "net_company_revenue";
+  source: "net_deposit";
   /**
-   * Is client trading P&L (B-book) included in net_company_revenue?
+   * Is client trading P&L (B-book) included in the value metric?
    * OPEN DECISION — confirm with Finance (Blueprint §9, §12). Affects the source
    * export, NOT the engine. Placeholder default: excluded until signed off.
    */
   includeBBookPnl: boolean;
   /**
-   * If per-client revenue isn't exportable, document a proxy here
-   * (e.g. "volume × avg_markup") as an interim net_revenue. null = use real field.
+   * If the value field isn't exportable, document a proxy here
+   * (e.g. "volume × avg_markup") as an interim value. null = use the real field.
    */
   proxyFormula: string | null;
 }
@@ -97,7 +99,7 @@ export interface AttributionConfig {
 }
 
 export const DEFAULT_VALUE_METRIC: ValueMetricConfig = {
-  source: "net_company_revenue",
+  source: "net_deposit",
   includeBBookPnl: false, // OPEN DECISION — Finance sign-off pending
   proxyFormula: null,
 };
@@ -111,8 +113,14 @@ export const DEFAULT_ATTRIBUTION: AttributionConfig = {
   method: "latest_in_scope_servicing_agent",
 };
 
-/** The full settings object the engine will consume in P1. */
-export interface EngineSettings {
+/**
+ * Platform-level policy config (dials + modelling choices). This documents the
+ * desk's policy decisions. The ENGINE consumes a flat `EngineSettings`
+ * (lib/engine/types.ts) carrying payout_rate / hold_pct / outcome_weight /
+ * impede_penalty / status — kept separate so the pure engine has zero coupling
+ * to this placeholder config.
+ */
+export interface PlatformConfig {
   dials: RewardDials;
   okrs: OkrTargets;
   valueMetric: ValueMetricConfig;
@@ -120,7 +128,7 @@ export interface EngineSettings {
   attribution: AttributionConfig;
 }
 
-export const DEFAULT_SETTINGS: EngineSettings = {
+export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
   dials: DEFAULT_DIALS,
   okrs: DEFAULT_OKRS,
   valueMetric: DEFAULT_VALUE_METRIC,
