@@ -1,13 +1,46 @@
 /**
- * CSV parsing for clients / activity uploads.
+ * CSV parsing for clients / activity uploads (P2).
  *
- * P0 STUB — built in P2 (DB + ingestion). Mirrors the prototype's parseCSV
- * (Opo_Retention_Desk_Platform_v1.html): split on newlines, comma-split cells,
- * coerce numerics, reject commas inside values. Implemented alongside validate.ts.
+ * Deliberately minimal and dependency-free, mirroring the prototype's parseCSV:
+ * split on newlines, comma-split cells, trim. It does NOT try to handle quoted
+ * commas — embedded commas are a validation error (BUILD_SPEC §7: "no commas
+ * inside values"), detected downstream as a cell-count mismatch.
  */
 
-export type CsvRow = Record<string, string | number>;
+export interface ParsedCsvRow {
+  /** 1-based source line number (the header is line 1), for the error report. */
+  lineNumber: number;
+  cells: string[];
+}
 
-export function parseCsv(_text: string): CsvRow[] {
-  throw new Error("parseCsv: implemented in P2 (ingestion).");
+export interface ParsedCsv {
+  columns: string[];
+  rows: ParsedCsvRow[];
+}
+
+export function parseCsv(text: string): ParsedCsv {
+  const lines = text.replace(/\r/g, "").split("\n");
+
+  let headerIdx = -1;
+  for (let i = 0; i < lines.length; i += 1) {
+    if ((lines[i] ?? "").trim().length > 0) {
+      headerIdx = i;
+      break;
+    }
+  }
+  if (headerIdx === -1) return { columns: [], rows: [] };
+
+  const columns = (lines[headerIdx] ?? "").split(",").map((s) => s.trim());
+
+  const rows: ParsedCsvRow[] = [];
+  for (let i = headerIdx + 1; i < lines.length; i += 1) {
+    const line = lines[i] ?? "";
+    if (line.trim().length === 0) continue;
+    rows.push({
+      lineNumber: i + 1,
+      cells: line.split(",").map((c) => c.trim()),
+    });
+  }
+
+  return { columns, rows };
 }
