@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retention Desk — Reward & Performance Platform</title>
+<style>
+  :root{
+    --bg:#0f1620; --panel:#16202c; --panel2:#1d2a39; --line:#2a3a4d;
+    --ink:#e8eef5; --muted:#90a2b6; --accent:#3d9be9; --good:#37c98b;
+    --warn:#f0a13a; --bad:#ec5b62; --chip:#23344a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45}
+  header{padding:16px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  header h1{font-size:17px;margin:0;font-weight:600}
+  header .sub{color:var(--muted);font-size:12px}
+  .tabs{display:flex;gap:4px;flex-wrap:wrap;padding:0 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+  .tab{padding:11px 16px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;font-weight:500;white-space:nowrap}
+  .tab:hover{color:var(--ink)}
+  .tab.active{color:var(--ink);border-bottom-color:var(--accent)}
+  main{padding:22px;max-width:1180px;margin:0 auto}
+  .view{display:none}
+  .view.active{display:block}
+  .grid{display:grid;gap:14px}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:860px){.g4,.g3,.g2{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.g4,.g3,.g2{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .kpi{display:flex;flex-direction:column;gap:4px}
+  .kpi .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  .kpi .val{font-size:26px;font-weight:700}
+  .kpi .hint{color:var(--muted);font-size:12px}
+  h2{font-size:15px;margin:0 0 12px;font-weight:600}
+  h3{font-size:13px;margin:18px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;cursor:pointer;user-select:none}
+  th:hover{color:var(--ink)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  tr.clickable{cursor:pointer}
+  tr.clickable:hover td{background:var(--panel2)}
+  .bar{height:8px;background:var(--chip);border-radius:6px;overflow:hidden;min-width:60px}
+  .bar > span{display:block;height:100%;background:var(--accent);border-radius:6px}
+  .bar.good>span{background:var(--good)} .bar.warn>span{background:var(--warn)} .bar.bad>span{background:var(--bad)}
+  .chip{display:inline-block;padding:2px 9px;border-radius:20px;background:var(--chip);font-size:12px}
+  .chip.good{background:rgba(55,201,139,.18);color:var(--good)}
+  .chip.warn{background:rgba(240,161,58,.18);color:var(--warn)}
+  .chip.bad{background:rgba(236,91,98,.18);color:var(--bad)}
+  select,input[type=text],input[type=number]{background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+    border-radius:8px;padding:8px 10px;font-size:13px}
+  input[type=range]{width:100%}
+  button{background:var(--accent);color:#04111d;border:none;border-radius:8px;padding:9px 14px;font-weight:600;cursor:pointer;font-size:13px}
+  button.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+  button:hover{filter:brightness(1.07)}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .spread{justify-content:space-between}
+  .dial{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .dial .row{justify-content:space-between}
+  .pill{font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent)}
+  .money{font-variant-numeric:tabular-nums}
+  .muted{color:var(--muted)}
+  .split{display:flex;height:30px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+  .split .now{background:var(--good);display:flex;align-items:center;justify-content:center;color:#04111d;font-weight:700;font-size:12px}
+  .split .held{background:var(--warn);display:flex;align-items:center;justify-content:center;color:#04111d;font-weight:700;font-size:12px}
+  .drop{border:1.5px dashed var(--line);border-radius:12px;padding:22px;text-align:center;color:var(--muted)}
+  .note{background:var(--panel2);border-left:3px solid var(--accent);padding:10px 14px;border-radius:6px;font-size:13px;margin:10px 0}
+  code{background:var(--panel2);padding:1px 6px;border-radius:5px;font-size:12px}
+  .tag{font-size:11px;color:var(--muted)}
+  ul.tight{margin:6px 0;padding-left:18px} ul.tight li{margin:3px 0}
+  .big{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Retention Desk · Reward &amp; Performance Platform</h1>
+    <div class="sub">Upload your CRM &amp; call exports → see the pool, scores, rankings and payouts. No install. Works offline.</div>
+  </div>
+  <div style="margin-left:auto" class="row">
+    <label class="muted">Scope&nbsp;</label>
+    <select id="scopeSel" onchange="render()"></select>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-v="overview" onclick="tab(this)">Desk Overview</div>
+  <div class="tab" data-v="board" onclick="tab(this)">Leaderboard</div>
+  <div class="tab" data-v="agent" onclick="tab(this)">Agent View</div>
+  <div class="tab" data-v="data" onclick="tab(this)">Data &amp; Upload</div>
+  <div class="tab" data-v="settings" onclick="tab(this)">Settings &amp; Dials</div>
+  <div class="tab" data-v="method" onclick="tab(this)">How it works</div>
+</div>
+
+<main>
+  <!-- OVERVIEW -->
+  <section class="view active" id="v-overview">
+    <div class="grid g4">
+      <div class="card kpi"><span class="label">Net desk revenue</span><span class="val money" id="k-rev"></span><span class="hint" id="k-rev-h"></span></div>
+      <div class="card kpi"><span class="label">Reward pool</span><span class="val money" id="k-pool"></span><span class="hint" id="k-pool-h"></span></div>
+      <div class="card kpi"><span class="label">Active-client retention</span><span class="val" id="k-ret"></span><span class="hint">survived ÷ serviced</span></div>
+      <div class="card kpi"><span class="label">Agents · Clients</span><span class="val" id="k-counts"></span><span class="hint">in scope</span></div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card">
+        <h2>Net revenue by month</h2>
+        <div id="revByMonth"></div>
+      </div>
+      <div class="card">
+        <h2>Pool distribution this scope</h2>
+        <div class="row spread"><span class="muted">Paid now</span><span class="money" id="k-now"></span></div>
+        <div class="row spread" style="margin-bottom:8px"><span class="muted">Held → matures next quarter</span><span class="money" id="k-held"></span></div>
+        <div class="split"><div class="now" id="sp-now"></div><div class="held" id="sp-held"></div></div>
+        <div class="note">The held portion releases next quarter <b>if the clients stay and revenue doesn't reverse</b>. This is the "prove the client is real" buffer — no one is paid for retention that didn't last.</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h2>Desk OKRs — progress vs target</h2>
+      <div id="okrBox"></div>
+    </div>
+  </section>
+
+  <!-- LEADERBOARD -->
+  <section class="view" id="v-board">
+    <div class="card">
+      <div class="row spread" style="margin-bottom:10px">
+        <h2 style="margin:0">Contribution leaderboard</h2>
+        <input type="text" id="boardSearch" placeholder="Search agent…" oninput="renderBoard()" style="width:220px">
+      </div>
+      <table id="boardTbl"></table>
+      <div class="tag" style="margin-top:8px">Click a row to open that agent. Click a column header to sort.</div>
+    </div>
+  </section>
+
+  <!-- AGENT -->
+  <section class="view" id="v-agent">
+    <div class="card">
+      <div class="row"><label class="muted">Agent&nbsp;</label><select id="agentSel" onchange="renderAgent()"></select></div>
+    </div>
+    <div id="agentBody"></div>
+  </section>
+
+  <!-- DATA -->
+  <section class="view" id="v-data">
+    <div class="grid g2">
+      <div class="card">
+        <h2>1 · Clients file <span class="tag">(one row per client per month)</span></h2>
+        <div class="drop" id="dropClients">
+          <input type="file" id="fileClients" accept=".csv" style="display:none" onchange="onFile(event,'clients')">
+          <p>Drop the <b>clients</b> CSV here or <button class="ghost" onclick="document.getElementById('fileClients').click()">choose file</button></p>
+          <div class="tag" id="statClients">No file loaded — using demo data.</div>
+        </div>
+        <button class="ghost" style="margin-top:10px" onclick="downloadTemplate('clients')">Download blank template</button>
+      </div>
+      <div class="card">
+        <h2>2 · Activity file <span class="tag">(one row per agent per month)</span></h2>
+        <div class="drop" id="dropAct">
+          <input type="file" id="fileAct" accept=".csv" style="display:none" onchange="onFile(event,'activity')">
+          <p>Drop the <b>activity</b> CSV here or <button class="ghost" onclick="document.getElementById('fileAct').click()">choose file</button></p>
+          <div class="tag" id="statAct">No file loaded — using demo data.</div>
+        </div>
+        <button class="ghost" style="margin-top:10px" onclick="downloadTemplate('activity')">Download blank template</button>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h2>Required columns</h2>
+      <h3>Clients file</h3>
+      <p class="muted"><code>period</code> (YYYY-MM), <code>client_id</code>, <code>agent_id</code>, <code>status</code> (active / dormant / churned), <code>net_revenue</code> (what the client earned the company that month: spread + commission + swap, net of reversals), <code>deposits</code>, <code>withdrawals</code>, <code>bonus_credit</code></p>
+      <h3>Activity file</h3>
+      <p class="muted"><code>period</code>, <code>agent_id</code>, <code>agent_name</code>, <code>qualified_calls</code>, <code>talk_time_min</code>, <code>messages</code>, <code>avg_response_min</code>, <code>clients_covered</code>, <code>assigned_clients</code>, <code>conduct_score</code> (0–1, default 1), <code>withdrawal_impeding_flag</code> (0/1)</p>
+      <div class="note">Mix is fine: fill what the CRM exports, type the rest by hand. The platform only cares about the column names, not where the data came from. Values must not contain commas.</div>
+      <div class="row" style="margin-top:8px">
+        <button onclick="loadDemo()">Reload demo data</button>
+        <button class="ghost" onclick="clearData()">Clear all data</button>
+        <button class="ghost" onclick="exportResults()">Export current results (CSV)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="view" id="v-settings">
+    <div class="grid g2">
+      <div class="card">
+        <h2>Reward dials</h2>
+        <div class="dial">
+          <div class="row spread"><span>Payout rate <span class="tag">(% of net desk revenue → pool)</span></span><span class="pill" id="lab-payout"></span></div>
+          <input type="range" id="d-payout" min="0" max="30" step="0.5" oninput="setDial()">
+        </div>
+        <div class="dial">
+          <div class="row spread"><span>Paid now vs held back</span><span class="pill" id="lab-hold"></span></div>
+          <input type="range" id="d-hold" min="0" max="60" step="5" oninput="setDial()">
+        </div>
+        <div class="dial">
+          <div class="row spread"><span>Outcome weight vs activity weight</span><span class="pill" id="lab-wo"></span></div>
+          <input type="range" id="d-wo" min="0" max="100" step="5" oninput="setDial()">
+        </div>
+        <div class="dial">
+          <div class="row spread"><span>Withdrawal-impeding penalty <span class="tag">(conduct multiplier)</span></span><span class="pill" id="lab-pen"></span></div>
+          <input type="range" id="d-pen" min="0" max="100" step="5" oninput="setDial()">
+        </div>
+        <div class="row"><label class="muted">Currency&nbsp;</label><input type="text" id="d-cur" style="width:60px" value="$" oninput="setDial()"></div>
+      </div>
+      <div class="card">
+        <h2>OKR targets <span class="tag">(per scope)</span></h2>
+        <div class="dial"><div class="row spread"><span>Active-client retention target</span><span class="pill" id="lab-tret"></span></div>
+          <input type="range" id="d-tret" min="50" max="100" step="1" oninput="setDial()"></div>
+        <div class="row" style="margin-bottom:10px"><label class="muted">Reactivations target / scope&nbsp;</label><input type="number" id="d-react" style="width:80px" value="8" oninput="setDial()"></div>
+        <div class="note">Everything here is a dial. Nothing is hard-coded. Model a few payout-rate envelopes before you commit a number — the pool and every payout update live.</div>
+        <button class="ghost" onclick="resetDials()">Reset to defaults</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- METHOD -->
+  <section class="view" id="v-method">
+    <div class="card">
+      <h2>The model in plain language</h2>
+      <p>The desk earns a <b>shared reward pool</b> equal to a set percentage of the net revenue its clients generated. Each person's slice of that pool is set by a <b>contribution score</b> — what they verifiably did and what came of it. Part of the reward is paid now; part is held until next quarter to prove the clients actually stayed.</p>
+      <h3>Pool</h3>
+      <p class="muted"><code>Pool = Net desk revenue × Payout rate</code></p>
+      <h3>Each agent's score</h3>
+      <p class="muted"><code>Score = Conduct × (Outcome-weight × Outcome + Activity-weight × Activity)</code></p>
+      <ul class="tight">
+        <li><b>Outcome</b> — net revenue retained &amp; grown on the clients they serviced, blended with whether those clients survived. <i>This is where withdrawals live:</i> money that leaves and doesn't come back lowers retained revenue and survival — so the score nets out withdrawals automatically.</li>
+        <li><b>Activity</b> — quality-weighted servicing: meaningful calls, talk-time, messages, responsiveness, and coverage of assigned clients. Rewards effort on clients that haven't paid off yet.</li>
+        <li><b>Conduct</b> — a 0–1 gate. Complaints, compliance issues, or <b>impeding a client's withdrawal</b> pull it down. No one is ever rewarded for blocking a withdrawal — doing so is penalised.</li>
+      </ul>
+      <h3>Your payout</h3>
+      <p class="muted"><code>Payout = Pool × (your score ÷ total score)</code> → split into <b>paid now</b> and <b>held</b>.</p>
+      <div class="note"><b>Withdrawals policy (show this to the team):</b> A withdrawal is never scored as an event. If a client takes profit and keeps trading, your reward is untouched. We will never ask you to stop a withdrawal — and impeding one lowers your conduct score. Withdrawals only matter through whether the relationship stays alive and valuable over the quarter.</div>
+      <div class="note">Why hold a portion back? Retention value is only real if it lasts. The held part releases next quarter when the clients prove they stayed — and is forfeited if they churn or the revenue reverses. It protects the desk from paying for retention that evaporated.</div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ============ STORAGE-SAFE STATE ============ */
+const LS = { get(k,f){try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}},
+             set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}} };
+
+const DEFAULTS = { payout:10, hold:40, wo:65, pen:50, cur:'$', tret:85, react:8 };
+let dials = LS.get('rd_dials', {...DEFAULTS});
+let clients = LS.get('rd_clients', null);
+let activity = LS.get('rd_activity', null);
+
+/* ============ DEMO DATA ============ */
+const DEMO_CLIENTS = `period,client_id,agent_id,status,net_revenue,deposits,withdrawals,bonus_credit
+2026-01,C001,A1,active,820,5000,0,250
+2026-01,C002,A1,active,140,1000,500,0
+2026-01,C003,A2,active,2100,12000,0,500
+2026-01,C004,A2,churned,90,800,800,0
+2026-01,C005,A3,active,360,3000,1000,100
+2026-01,C006,A3,dormant,40,500,400,0
+2026-01,C007,A4,active,1450,8000,0,300
+2026-01,C008,A5,active,610,4000,2000,0
+2026-02,C001,A1,active,910,2000,500,0
+2026-02,C002,A1,churned,60,0,1000,0
+2026-02,C003,A2,active,2450,5000,0,0
+2026-02,C005,A3,active,540,2000,500,0
+2026-02,C007,A4,active,1600,3000,0,0
+2026-02,C008,A5,active,720,1500,0,0
+2026-02,C009,A4,active,300,2500,0,150
+2026-03,C001,A1,active,1020,3000,1000,0
+2026-03,C003,A2,active,2600,4000,0,0
+2026-03,C005,A3,active,600,1000,0,0
+2026-03,C007,A4,active,1720,2000,0,0
+2026-03,C008,A5,dormant,80,0,3000,0
+2026-03,C010,A1,active,430,3500,0,200
+2026-04,C001,A1,active,1130,2000,0,0
+2026-04,C003,A2,active,2750,3000,0,0
+2026-04,C005,A3,active,650,1500,500,0
+2026-04,C007,A4,active,1810,1500,0,0
+2026-04,C010,A1,active,520,1000,0,0
+2026-04,C011,A5,active,940,6000,0,300
+2026-05,C001,A1,active,1190,1000,0,0
+2026-05,C003,A2,active,2900,2000,0,0
+2026-05,C005,A3,active,690,1000,0,0
+2026-05,C007,A4,active,1880,1000,0,0
+2026-05,C011,A5,active,1080,2000,0,0
+2026-05,C010,A1,churned,120,0,2500,0
+2026-06,C001,A1,active,1240,1500,0,0
+2026-06,C003,A2,active,3050,2500,0,0
+2026-06,C005,A3,active,720,500,0,0
+2026-06,C007,A4,active,1950,1000,0,0
+2026-06,C011,A5,active,1160,1500,0,0`;
+
+const DEMO_ACT = `period,agent_id,agent_name,qualified_calls,talk_time_min,messages,avg_response_min,clients_covered,assigned_clients,conduct_score,withdrawal_impeding_flag
+2026-01,A1,Sara,42,310,120,18,3,3,1,0
+2026-01,A2,Mehdi,28,260,60,40,2,2,1,0
+2026-01,A3,Lena,35,180,90,25,2,2,1,0
+2026-01,A4,Omar,30,240,70,20,1,1,1,0
+2026-01,A5,Niki,22,150,55,55,1,1,0.8,1
+2026-02,A1,Sara,45,330,130,15,2,2,1,0
+2026-02,A2,Mehdi,30,300,65,35,1,1,1,0
+2026-02,A3,Lena,33,170,85,28,1,1,1,0
+2026-02,A4,Omar,38,290,95,16,2,2,1,0
+2026-02,A5,Niki,25,160,60,50,1,1,1,0
+2026-03,A1,Sara,48,350,140,14,2,2,1,0
+2026-03,A2,Mehdi,31,310,68,33,1,1,1,0
+2026-03,A3,Lena,36,200,92,24,1,1,1,0
+2026-03,A4,Omar,40,300,100,15,1,1,1,0
+2026-03,A5,Niki,20,140,50,60,1,1,0.7,1
+2026-04,A1,Sara,50,360,150,13,2,2,1,0
+2026-04,A2,Mehdi,33,320,72,30,1,1,1,0
+2026-04,A3,Lena,38,210,95,22,1,1,1,0
+2026-04,A4,Omar,41,305,105,15,1,1,1,0
+2026-04,A5,Niki,28,200,70,42,1,1,1,0
+2026-05,A1,Sara,49,355,148,13,2,2,1,0
+2026-05,A2,Mehdi,34,330,75,28,1,1,1,0
+2026-05,A3,Lena,39,215,98,21,1,1,1,0
+2026-05,A4,Omar,42,310,108,14,1,1,1,0
+2026-05,A5,Niki,30,210,74,40,1,1,1,0
+2026-06,A1,Sara,47,345,145,14,1,1,1,0
+2026-06,A2,Mehdi,35,340,78,27,1,1,1,0
+2026-06,A3,Lena,40,220,100,20,1,1,1,0
+2026-06,A4,Omar,43,315,110,14,1,1,1,0
+2026-06,A5,Niki,31,215,76,39,1,1,1,0`;
+
+/* ============ CSV ============ */
+function parseCSV(txt){
+  const lines = txt.replace(/\r/g,'').split('\n').filter(l=>l.trim().length);
+  const head = lines[0].split(',').map(s=>s.trim());
+  return lines.slice(1).map(l=>{
+    const c = l.split(',');
+    const o = {};
+    head.forEach((h,i)=>{ const v=(c[i]||'').trim(); o[h]= v==='' ? '' : (isNaN(v)?v:Number(v)); });
+    return o;
+  });
+}
+function toCSV(rows){ if(!rows.length) return ''; const h=Object.keys(rows[0]);
+  return h.join(',')+'\n'+rows.map(r=>h.map(k=>r[k]).join(',')).join('\n'); }
+
+/* ============ ENGINE ============ */
+function periodsInScope(scope){
+  const all = [...new Set((clients||[]).map(r=>r.period))].sort();
+  if(scope==='all') return all;
+  return [scope];
+}
+function fmtMoney(n){ const c=dials.cur||'$'; const s=Math.round(n).toLocaleString();
+  return c+s; }
+function norm(arr){ const m=Math.max(...arr,0); return arr.map(v=> m>0? v/m : 0); }
+
+function compute(scope){
+  const ps = periodsInScope(scope);
+  const cl = (clients||[]).filter(r=>ps.includes(r.period));
+  const ac = (activity||[]).filter(r=>ps.includes(r.period));
+  const lastP = ps[ps.length-1];
+
+  // agent registry
+  const agents = {};
+  ac.forEach(r=>{ if(!agents[r.agent_id]) agents[r.agent_id]={id:r.agent_id,name:r.agent_name||r.agent_id,
+      calls:0,talk:0,msg:0,respN:0,respCnt:0,cov:0,assigned:0,conduct:[],impede:0}; });
+  cl.forEach(r=>{ if(!agents[r.agent_id]) agents[r.agent_id]={id:r.agent_id,name:r.agent_id,
+      calls:0,talk:0,msg:0,respN:0,respCnt:0,cov:0,assigned:0,conduct:[],impede:0}; });
+
+  ac.forEach(r=>{ const a=agents[r.agent_id]; if(!a) return;
+    a.calls+=+r.qualified_calls||0; a.talk+=+r.talk_time_min||0; a.msg+=+r.messages||0;
+    if(r.avg_response_min!==''){a.respN+=+r.avg_response_min;a.respCnt++;}
+    a.cov+=+r.clients_covered||0; a.assigned+=+r.assigned_clients||0;
+    if(r.conduct_score!=='') a.conduct.push(+r.conduct_score);
+    if(+r.withdrawal_impeding_flag===1) a.impede++;
+  });
+
+  // outcomes per agent
+  const netDeskRevenue = cl.reduce((s,r)=>s+(+r.net_revenue||0),0);
+  Object.values(agents).forEach(a=>{a.rev=0;a.cids=new Set();a.survived=0;a.serviced=0;a.withdrawals=0;});
+  // survival from last period status, revenue across scope
+  const lastStatus = {};
+  cl.forEach(r=>{ const a=agents[r.agent_id]; if(!a) return;
+    a.rev+=(+r.net_revenue||0); a.cids.add(r.client_id); a.withdrawals+=(+r.withdrawals||0);
+    if(r.period===lastP){ lastStatus[r.client_id]=r.status; } });
+  // serviced = distinct clients; survived = those whose last-seen status is active/dormant (not churned)
+  cl.forEach(r=>{}); // status by latest appearance
+  const latestStatusByClient={};
+  cl.sort((a,b)=>a.period<b.period?-1:1).forEach(r=>{latestStatusByClient[r.client_id]={s:r.status,a:r.agent_id};});
+  Object.values(agents).forEach(a=>{
+    a.serviced=a.cids.size;
+    let surv=0; a.cids.forEach(cid=>{ if(latestStatusByClient[cid] && latestStatusByClient[cid].a===a.id){
+        if(latestStatusByClient[cid].s!=='churned') surv++; } });
+    // count serviced as clients whose latest agent is this agent (avoid double counting moved clients)
+    let own=0; a.cids.forEach(cid=>{ if(latestStatusByClient[cid] && latestStatusByClient[cid].a===a.id) own++; });
+    a.ownClients = own || a.serviced;
+    a.survived = surv;
+    a.survRate = a.ownClients>0? surv/a.ownClients : 0;
+    a.coverage = a.assigned>0? Math.min(1,a.cov/a.assigned) : 1;
+    a.avgResp = a.respCnt>0? a.respN/a.respCnt : null;
+    a.conductScore = a.conduct.length? a.conduct.reduce((s,v)=>s+v,0)/a.conduct.length : 1;
+  });
+
+  const list = Object.values(agents);
+  // indices
+  const outcomeRaw = list.map(a=> Math.max(0,a.rev) * (0.5+0.5*a.survRate));
+  const respScoreRaw = list.map(a=> a.avgResp==null?0 : 1/(1+a.avgResp/15)); // faster = higher
+  const actComposite = list.map((a,i)=> 0.35*(a.calls)+0.20*(a.talk/10)+0.20*(a.msg)+0.15*(respScoreRaw[i]*100)+0.10*(a.coverage*100));
+  const oIdx = norm(outcomeRaw), aIdx = norm(actComposite);
+  const wo = dials.wo/100, wa = 1-wo;
+  const penalty = 1 - dials.pen/100;
+
+  list.forEach((a,i)=>{
+    a.outcomeIdx=oIdx[i]; a.activityIdx=aIdx[i];
+    let conduct = a.conductScore;
+    if(a.impede>0) conduct = Math.min(conduct, penalty);
+    a.conductFinal = conduct;
+    a.score = conduct*(wo*a.outcomeIdx + wa*a.activityIdx);
+  });
+  const sumScore = list.reduce((s,a)=>s+a.score,0);
+  const pool = Math.max(0,netDeskRevenue)*(dials.payout/100);
+  const holdFrac = dials.hold/100;
+  list.forEach(a=>{ a.share = sumScore>0? a.score/sumScore : 0;
+    a.payout = pool*a.share; a.now=a.payout*(1-holdFrac); a.held=a.payout*holdFrac; });
+  list.sort((a,b)=>b.payout-a.payout); list.forEach((a,i)=>a.rank=i+1);
+
+  // desk retention
+  const allClientsLatest = Object.values(latestStatusByClient);
+  const survAll = allClientsLatest.filter(x=>x.s!=='churned').length;
+  const retRate = allClientsLatest.length? survAll/allClientsLatest.length : 0;
+  const reactivations = 0; // placeholder (needs dormant→active transition tracking)
+
+  return {ps,list,pool,netDeskRevenue,holdFrac,retRate,
+    nClients:allClientsLatest.length, nAgents:list.length,
+    paidNow:pool*(1-holdFrac), held:pool*holdFrac, sumScore};
+}
+
+/* ============ MEDIANS / HINTS ============ */
+function median(a){ if(!a.length) return 0; const s=[...a].sort((x,y)=>x-y); const m=Math.floor(s.length/2);
+  return s.length%2? s[m] : (s[m-1]+s[m])/2; }
+function whatMovesUp(agent,res){
+  const dims=[
+    {k:'outcomeIdx',label:'retained revenue & client survival',vals:res.list.map(a=>a.outcomeIdx)},
+    {k:'activityIdx',label:'servicing activity (calls, messages, responsiveness)',vals:res.list.map(a=>a.activityIdx)},
+    {k:'coverage',label:'coverage of your assigned clients',vals:res.list.map(a=>a.coverage)},
+    {k:'survRate',label:'keeping your clients from churning',vals:res.list.map(a=>a.survRate)},
+  ];
+  const tips=[];
+  dims.forEach(d=>{ const med=median(d.vals); if(agent[d.k] < med*0.95){
+    tips.push(`Lift your <b>${d.label}</b> — you're below the desk median here.`); }});
+  if(agent.conductFinal<1) tips.push(`Clear your <b>conduct flags</b> — they are reducing your whole score.`);
+  if(!tips.length) tips.push(`You're at or above desk median on every dimension. Hold the line and protect your top clients.`);
+  return tips.slice(0,3);
+}
+
+/* ============ RENDER ============ */
+function tab(el){ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active'); const v=el.dataset.v;
+  document.querySelectorAll('.view').forEach(s=>s.classList.remove('active'));
+  document.getElementById('v-'+v).classList.add('active');
+  if(v==='board') renderBoard(); if(v==='agent') renderAgent();
+}
+function fillScope(){
+  const all=[...new Set((clients||[]).map(r=>r.period))].sort();
+  const sel=document.getElementById('scopeSel'); const cur=sel.value;
+  sel.innerHTML = `<option value="all">All (Jan–Jun backtest)</option>`+all.map(p=>`<option value="${p}">${p}</option>`).join('');
+  if(cur) sel.value=cur;
+}
+function bar(frac,cls){ return `<div class="bar ${cls||''}"><span style="width:${Math.round(frac*100)}%"></span></div>`; }
+
+function render(){
+  fillScope();
+  const scope=document.getElementById('scopeSel').value||'all';
+  if(!clients||!clients.length){ return; }
+  const res=compute(scope);
+  // overview
+  document.getElementById('k-rev').textContent=fmtMoney(res.netDeskRevenue);
+  document.getElementById('k-rev-h').textContent=`${res.ps.length} month(s) in scope`;
+  document.getElementById('k-pool').textContent=fmtMoney(res.pool);
+  document.getElementById('k-pool-h').textContent=`at ${dials.payout}% payout rate`;
+  document.getElementById('k-ret').textContent=Math.round(res.retRate*100)+'%';
+  document.getElementById('k-counts').textContent=`${res.nAgents} · ${res.nClients}`;
+  document.getElementById('k-now').textContent=fmtMoney(res.paidNow);
+  document.getElementById('k-held').textContent=fmtMoney(res.held);
+  document.getElementById('sp-now').style.width=Math.round((1-res.holdFrac)*100)+'%';
+  document.getElementById('sp-now').textContent='Now '+Math.round((1-res.holdFrac)*100)+'%';
+  document.getElementById('sp-held').style.width=Math.round(res.holdFrac*100)+'%';
+  document.getElementById('sp-held').textContent='Held '+Math.round(res.holdFrac*100)+'%';
+  // rev by month
+  const all=[...new Set((clients||[]).map(r=>r.period))].sort();
+  const byM=all.map(p=>({p,v:clients.filter(r=>r.period===p).reduce((s,r)=>s+(+r.net_revenue||0),0)}));
+  const mx=Math.max(...byM.map(x=>x.v),1);
+  document.getElementById('revByMonth').innerHTML=byM.map(x=>
+    `<div class="row" style="margin:6px 0"><span style="width:62px" class="muted">${x.p}</span>
+     <div style="flex:1">${bar(x.v/mx)}</div><span class="money" style="width:80px;text-align:right">${fmtMoney(x.v)}</span></div>`).join('');
+  // OKR
+  const retT=dials.tret;
+  document.getElementById('okrBox').innerHTML=`
+    <div class="row" style="margin:8px 0"><span style="width:240px">Active-client retention</span>
+      <div style="flex:1">${bar(res.retRate, res.retRate*100>=retT?'good':'warn')}</div>
+      <span style="width:130px;text-align:right">${Math.round(res.retRate*100)}% / ${retT}% target</span></div>
+    <div class="row" style="margin:8px 0"><span style="width:240px">Reward pool funded</span>
+      <div style="flex:1">${bar(1,'good')}</div>
+      <span style="width:130px;text-align:right">${fmtMoney(res.pool)}</span></div>`;
+  renderBoard(); renderAgent(); syncDials();
+  LS.set('rd_dials',dials);
+}
+
+let boardSort={k:'payout',dir:-1};
+function renderBoard(){
+  const scope=document.getElementById('scopeSel').value||'all';
+  if(!clients||!clients.length){document.getElementById('boardTbl').innerHTML='<tr><td>No data</td></tr>';return;}
+  const res=compute(scope);
+  const q=(document.getElementById('boardSearch').value||'').toLowerCase();
+  let rows=res.list.filter(a=>a.name.toLowerCase().includes(q));
+  rows.sort((a,b)=> (a[boardSort.k]>b[boardSort.k]?1:-1)*boardSort.dir);
+  const cols=[['rank','#'],['name','Agent'],['share','Share'],['outcomeIdx','Outcome'],['activityIdx','Activity'],
+    ['conductFinal','Conduct'],['payout','Payout'],['now','Paid now'],['held','Held']];
+  let h='<tr>'+cols.map(c=>`<th class="${['share','outcomeIdx','activityIdx','conductFinal','payout','now','held'].includes(c[0])?'num':''}" onclick="sortBoard('${c[0]}')">${c[1]}</th>`).join('')+'</tr>';
+  h+=rows.map(a=>`<tr class="clickable" onclick="openAgent('${a.id}')">
+    <td>${a.rank}</td><td>${a.name}</td>
+    <td class="num">${Math.round(a.share*100)}%</td>
+    <td class="num">${a.outcomeIdx.toFixed(2)}</td>
+    <td class="num">${a.activityIdx.toFixed(2)}</td>
+    <td class="num">${a.conductFinal.toFixed(2)}${a.impede>0?' ⚠':''}</td>
+    <td class="num money">${fmtMoney(a.payout)}</td>
+    <td class="num money">${fmtMoney(a.now)}</td>
+    <td class="num money">${fmtMoney(a.held)}</td></tr>`).join('');
+  document.getElementById('boardTbl').innerHTML=h;
+}
+function sortBoard(k){ boardSort.dir = boardSort.k===k? -boardSort.dir : -1; boardSort.k=k; renderBoard(); }
+
+function fillAgentSel(){
+  const scope=document.getElementById('scopeSel').value||'all';
+  if(!clients||!clients.length) return;
+  const res=compute(scope); const sel=document.getElementById('agentSel'); const cur=sel.value;
+  sel.innerHTML=res.list.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
+  if(cur && res.list.some(a=>a.id===cur)) sel.value=cur;
+}
+function openAgent(id){ document.querySelector('.tab[data-v="agent"]').click();
+  document.getElementById('agentSel').value=id; renderAgent(); }
+function renderAgent(){
+  fillAgentSel();
+  const scope=document.getElementById('scopeSel').value||'all';
+  if(!clients||!clients.length){document.getElementById('agentBody').innerHTML='';return;}
+  const res=compute(scope); const id=document.getElementById('agentSel').value;
+  const a=res.list.find(x=>x.id===id); if(!a){document.getElementById('agentBody').innerHTML='';return;}
+  const tips=whatMovesUp(a,res);
+  // history across all periods
+  const allP=[...new Set(clients.map(r=>r.period))].sort();
+  const hist=allP.map(p=>{ const r=compute(p); const ra=r.list.find(x=>x.id===id);
+    return {p, payout:ra?ra.payout:0, rank:ra?ra.rank:'-', rev:ra?ra.rev:0}; });
+  const mxh=Math.max(...hist.map(x=>x.payout),1);
+  document.getElementById('agentBody').innerHTML=`
+   <div class="grid g3">
+     <div class="card kpi"><span class="label">Rank this scope</span><span class="big">#${a.rank}<span class="muted" style="font-size:16px"> / ${res.nAgents}</span></span></div>
+     <div class="card kpi"><span class="label">Your share of the pool</span><span class="big">${Math.round(a.share*100)}%</span></div>
+     <div class="card kpi"><span class="label">Your reward</span><span class="big money">${fmtMoney(a.payout)}</span>
+        <span class="hint">${fmtMoney(a.now)} now · ${fmtMoney(a.held)} held</span></div>
+   </div>
+   <div class="grid g2" style="margin-top:14px">
+     <div class="card"><h2>Where you stand</h2>
+       <div class="row" style="margin:8px 0"><span style="width:170px">Outcome (revenue + survival)</span><div style="flex:1">${bar(a.outcomeIdx,a.outcomeIdx>=0.6?'good':'warn')}</div><span style="width:46px;text-align:right">${a.outcomeIdx.toFixed(2)}</span></div>
+       <div class="row" style="margin:8px 0"><span style="width:170px">Activity / servicing</span><div style="flex:1">${bar(a.activityIdx,a.activityIdx>=0.6?'good':'warn')}</div><span style="width:46px;text-align:right">${a.activityIdx.toFixed(2)}</span></div>
+       <div class="row" style="margin:8px 0"><span style="width:170px">Coverage of assigned</span><div style="flex:1">${bar(a.coverage,a.coverage>=0.9?'good':'warn')}</div><span style="width:46px;text-align:right">${Math.round(a.coverage*100)}%</span></div>
+       <div class="row" style="margin:8px 0"><span style="width:170px">Client survival</span><div style="flex:1">${bar(a.survRate,a.survRate>=0.85?'good':'bad')}</div><span style="width:46px;text-align:right">${Math.round(a.survRate*100)}%</span></div>
+       <div class="row" style="margin:8px 0"><span style="width:170px">Conduct</span><div style="flex:1">${bar(a.conductFinal,a.conductFinal>=1?'good':'bad')}</div><span style="width:46px;text-align:right">${a.conductFinal.toFixed(2)}</span></div>
+       ${a.impede>0?'<div class="note">⚠ A withdrawal-impeding flag is reducing your conduct multiplier. We never reward stopping a client withdrawal.</div>':''}
+     </div>
+     <div class="card"><h2>What moves you up</h2><ul class="tight">${tips.map(t=>`<li>${t}</li>`).join('')}</ul>
+       <h3>What you've done (in scope)</h3>
+       <table>
+         <tr><td>Clients serviced</td><td class="num">${a.ownClients}</td></tr>
+         <tr><td>Net revenue retained</td><td class="num money">${fmtMoney(a.rev)}</td></tr>
+         <tr><td>Qualified calls</td><td class="num">${a.calls}</td></tr>
+         <tr><td>Talk time (min)</td><td class="num">${a.talk}</td></tr>
+         <tr><td>Messages</td><td class="num">${a.msg}</td></tr>
+         <tr><td>Avg response (min)</td><td class="num">${a.avgResp==null?'—':Math.round(a.avgResp)}</td></tr>
+       </table>
+     </div>
+   </div>
+   <div class="card" style="margin-top:14px"><h2>Your history</h2>
+     ${hist.map(x=>`<div class="row" style="margin:6px 0"><span style="width:62px" class="muted">${x.p}</span>
+       <div style="flex:1">${bar(x.payout/mxh)}</div>
+       <span style="width:70px;text-align:right" class="money">${fmtMoney(x.payout)}</span>
+       <span style="width:50px;text-align:right" class="tag">#${x.rank}</span></div>`).join('')}
+   </div>`;
+}
+
+/* ============ DIALS ============ */
+function syncDials(){
+  document.getElementById('d-payout').value=dials.payout; document.getElementById('lab-payout').textContent=dials.payout+'%';
+  document.getElementById('d-hold').value=dials.hold; document.getElementById('lab-hold').textContent=(100-dials.hold)+'% now / '+dials.hold+'% held';
+  document.getElementById('d-wo').value=dials.wo; document.getElementById('lab-wo').textContent=dials.wo+'% outcome / '+(100-dials.wo)+'% activity';
+  document.getElementById('d-pen').value=dials.pen; document.getElementById('lab-pen').textContent='× '+((100-dials.pen)/100).toFixed(2);
+  document.getElementById('d-cur').value=dials.cur;
+  document.getElementById('d-tret').value=dials.tret; document.getElementById('lab-tret').textContent=dials.tret+'%';
+  document.getElementById('d-react').value=dials.react;
+}
+function setDial(){
+  dials.payout=+document.getElementById('d-payout').value;
+  dials.hold=+document.getElementById('d-hold').value;
+  dials.wo=+document.getElementById('d-wo').value;
+  dials.pen=+document.getElementById('d-pen').value;
+  dials.cur=document.getElementById('d-cur').value||'$';
+  dials.tret=+document.getElementById('d-tret').value;
+  dials.react=+document.getElementById('d-react').value;
+  LS.set('rd_dials',dials); render();
+}
+function resetDials(){ dials={...DEFAULTS}; LS.set('rd_dials',dials); render(); }
+
+/* ============ DATA IO ============ */
+function onFile(e,kind){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ const rows=parseCSV(r.result);
+    if(kind==='clients'){ clients=rows; LS.set('rd_clients',rows);
+      document.getElementById('statClients').textContent=`Loaded ${rows.length} client-month rows from ${f.name}`; }
+    else { activity=rows; LS.set('rd_activity',rows);
+      document.getElementById('statAct').textContent=`Loaded ${rows.length} activity rows from ${f.name}`; }
+    render(); };
+  r.readAsText(f);
+}
+function setupDrop(id,kind){
+  const d=document.getElementById(id);
+  ['dragover','dragenter'].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();d.style.borderColor='var(--accent)';}));
+  ['dragleave','drop'].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();d.style.borderColor='var(--line)';}));
+  d.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(!f) return;
+    const r=new FileReader(); r.onload=()=>{ const rows=parseCSV(r.result);
+      if(kind==='clients'){clients=rows;LS.set('rd_clients',rows);document.getElementById('statClients').textContent=`Loaded ${rows.length} rows from ${f.name}`;}
+      else{activity=rows;LS.set('rd_activity',rows);document.getElementById('statAct').textContent=`Loaded ${rows.length} rows from ${f.name}`;}
+      render(); }; r.readAsText(f); });
+}
+function downloadTemplate(kind){
+  const txt = kind==='clients'
+    ? 'period,client_id,agent_id,status,net_revenue,deposits,withdrawals,bonus_credit\n2026-07,C001,A1,active,0,0,0,0'
+    : 'period,agent_id,agent_name,qualified_calls,talk_time_min,messages,avg_response_min,clients_covered,assigned_clients,conduct_score,withdrawal_impeding_flag\n2026-07,A1,Name,0,0,0,0,0,0,1,0';
+  dl(txt, kind+'_template.csv');
+}
+function exportResults(){
+  const scope=document.getElementById('scopeSel').value||'all';
+  const res=compute(scope);
+  const rows=res.list.map(a=>({rank:a.rank,agent:a.name,share_pct:Math.round(a.share*100),
+    outcome:a.outcomeIdx.toFixed(2),activity:a.activityIdx.toFixed(2),conduct:a.conductFinal.toFixed(2),
+    net_revenue_retained:Math.round(a.rev),payout:Math.round(a.payout),paid_now:Math.round(a.now),held:Math.round(a.held)}));
+  dl(toCSV(rows), 'results_'+scope+'.csv');
+}
+function dl(txt,name){ const b=new Blob([txt],{type:'text/csv'}); const u=URL.createObjectURL(b);
+  const a=document.createElement('a'); a.href=u; a.download=name; a.click(); URL.revokeObjectURL(u); }
+function loadDemo(){ clients=parseCSV(DEMO_CLIENTS); activity=parseCSV(DEMO_ACT);
+  LS.set('rd_clients',clients); LS.set('rd_activity',activity);
+  document.getElementById('statClients').textContent='Demo data loaded.';
+  document.getElementById('statAct').textContent='Demo data loaded.'; render(); }
+function clearData(){ clients=null;activity=null; try{localStorage.removeItem('rd_clients');localStorage.removeItem('rd_activity');}catch(e){}
+  document.getElementById('statClients').textContent='Cleared.'; document.getElementById('statAct').textContent='Cleared.';
+  document.getElementById('boardTbl').innerHTML='<tr><td>No data — load a file or demo.</td></tr>'; }
+
+/* ============ INIT ============ */
+setupDrop('dropClients','clients'); setupDrop('dropAct','activity');
+if(!clients||!activity){ loadDemo(); } else { render(); }
+syncDials();
+</script>
+</body>
+</html>
