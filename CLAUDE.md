@@ -1,0 +1,34 @@
+# Working agreements
+
+- The HTML prototype in `/reference` is the source of truth for math and UX. Do not invent formulas.
+- The calculation engine (`/lib/engine/score.ts`) must be PURE: no DB, no fetch, no globals. Deterministic.
+- Never change a pay formula without updating `/lib/engine/score.test.ts` in the SAME commit and noting it in the PR.
+- All money/scoring values are configuration (`settings_version` / `lib/config`), never hardcoded.
+- Enforce access with RLS, not just the UI. Agents see only their own data.
+- TypeScript strict. No `any` in engine or db layers.
+- Every action that touches pay writes an `audit_log` row.
+- Keep dependencies minimal and portable (standard Postgres, no vendor-only SQL).
+- Run `npm test` and `npm run lint` before every commit. Engine acceptance tests must stay green.
+
+## Build phases (work in this order — BUILD_SPEC §13)
+
+- **P0 — Scaffold** ✅ Next.js + TS + tooling, repo structure, CLAUDE.md, CI, canonical `schema.sql`, config placeholders. (No reward math yet.)
+- **P1 — Engine first** ✅ pure `score.ts` + `score.test.ts` green (14 tests).
+  - ECONOMICS supersede the prototype: value metric = `net_deposit` (deposit − withdrawal, may be negative, not floored at agent level; pool floored at desk level), attribution = point-in-time `manager_email`, both indices MIN-MAX normalized, UNAPPROVED settings ⇒ `authorized:false` + PROVISIONAL disclaimer.
+  - Golden numbers locked: `netDeskValue = 34,000` · `pool = 3,400` · ranking `lida > hossein > lara > mahya > armin` · payouts `1331.68 / 943.69 / 768.44 / 294.43 / 61.76` · `armin conductFinal = 0.50`. Fixture: `tests/fixtures/demo_netdeposit.ts` (SYNTHETIC).
+- **P2 — DB + ingestion** ✅ `schema.sql` reconciled to the engine's vocabulary (`net_deposit` / `manager_email`); CSV parse + validate (per-row error report, negatives allowed), idempotent upsert on PKs, agent auto-create + seed, audit row per upload. Integration test (pg-mem, real DDL + SQL) proves the DB path reproduces the golden block. 22 tests green.
+- **P3-lite — Demo dashboard** ✅ read-only `/overview` server component: fixture → `computeScope` → executive table, PROVISIONAL banner while UNAPPROVED. No DB/auth/writes. Tailwind. Vercel-ready, zero env (`DEPLOY.md`).
+- **P3 — Auth + dashboards:** roles, RLS, the six manager views + `/me`, recompute wiring.
+- **P4 — Quarterly close + holdback ledger:** snapshots, lock, release/clawback, history.
+- **P5 — Harden + deploy:** error reports, exports, Vercel deploy, seed demo data, smoke tests.
+- **P6 — Portability:** Dockerfile, compose, migration doc.
+
+## Repo map
+
+- `app/` — Next.js App Router. `(auth)/login`, `(app)/{overview,leaderboard,agent/[id],me,data,settings,method}`, `api/`.
+- `lib/engine/` — pure reward engine (`score.ts`, `types.ts`, `score.test.ts`).
+- `lib/config/` — dials + modelling-choice config placeholders (value metric, survival, attribution).
+- `lib/ingest/` — CSV parse + validate (P2).
+- `lib/db/` — `schema.sql` (canonical DDL) + `queries.ts`.
+- `lib/auth/`, `lib/storage/` — portability seams (swap Supabase later).
+- `reference/` — canonical spec, prototype, and blueprint. Do not edit; they win on conflict.
