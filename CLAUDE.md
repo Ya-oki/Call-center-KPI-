@@ -17,6 +17,7 @@
   - ECONOMICS supersede the prototype: value metric = `net_deposit` (deposit − withdrawal, may be negative, not floored at agent level; pool floored at desk level), attribution = point-in-time `manager_email`, both indices MIN-MAX normalized, UNAPPROVED settings ⇒ `authorized:false` + PROVISIONAL disclaimer.
   - Golden numbers locked: `netDeskValue = 34,000` · `pool = 3,400` · ranking `lida > hossein > lara > mahya > armin` · payouts `1331.68 / 943.69 / 768.44 / 294.43 / 61.76` · `armin conductFinal = 0.50`. Fixture: `tests/fixtures/demo_netdeposit.ts` (SYNTHETIC).
 - **P2 — DB + ingestion** ✅ `schema.sql` reconciled to the engine's vocabulary (`net_deposit` / `manager_email`); CSV parse + validate (per-row error report, negatives allowed), idempotent upsert on PKs, agent auto-create + seed, audit row per upload. Integration test (pg-mem, real DDL + SQL) proves the DB path reproduces the golden block. 22 tests green.
+- **P3-lite — Demo dashboard** ✅ read-only `/overview` server component: fixture → `computeScope` → executive table, PROVISIONAL banner while UNAPPROVED. No DB/auth/writes. Tailwind. Vercel-ready, zero env (`DEPLOY.md`).
 - **P3 — Auth + dashboards:** roles, RLS, the six manager views + `/me`, recompute wiring.
 - **P4 — Quarterly close + holdback ledger:** snapshots, lock, release/clawback, history.
 - **P5 — Harden + deploy:** error reports, exports, Vercel deploy, seed demo data, smoke tests.

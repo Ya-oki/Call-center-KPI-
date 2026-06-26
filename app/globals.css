@@ -1,35 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /*
- * Global styles — palette lifted from the prototype
- * (Opo_Retention_Desk_Platform_v1.html) so the real UI (P3) matches it.
- * P0: minimal base only; component styles arrive with the views.
+ * Palette CSS vars are retained for the scaffold placeholder routes
+ * (app/_components/PhasePlaceholder). The demo overview uses Tailwind utilities.
  */
 :root {
-  --bg: #0f1620;
+  --bg: #0b1117;
   --panel: #16202c;
   --panel2: #1d2a39;
   --line: #2a3a4d;
   --ink: #e8eef5;
   --muted: #90a2b6;
   --accent: #3d9be9;
-  --good: #37c98b;
-  --warn: #f0a13a;
-  --bad: #ec5b62;
-}
-
-* {
-  box-sizing: border-box;
 }
 
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif;
   background: var(--bg);
   color: var(--ink);
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-a {
-  color: var(--accent);
 }
