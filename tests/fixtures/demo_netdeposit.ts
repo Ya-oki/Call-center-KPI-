@@ -1,17 +1,11 @@
 /**
- * ⚠️ SYNTHETIC DEMO DATA — NOT REAL. Do not treat as real agents, clients, or
- * money. Hand-authored to lock the P1 golden numbers (BUILD_SPEC §8, restated by
- * the P1 ECONOMICS block). Never replace with production data.
- *
- * Value metric = net_deposit (deposit − withdrawal); may be negative.
- * Attribution  = point-in-time manager_email on each client-month row.
+ * ⚠️ SYNTHETIC SAMPLE DATA — NOT REAL. Raw client/activity rows used only to
+ * exercise the CSV ingestion + DB upsert path (lib/db/ingest.integration.test).
+ * It is NOT wired to the v2 reward engine (which scores per-agent monthly
+ * metrics — see tests/fixtures/demoData.ts).
  */
 
-import type {
-  AgentActivity,
-  ClientMonthRow,
-  EngineSettings,
-} from "@/lib/engine/types";
+import type { AgentActivity, ClientMonthRow } from "@/lib/ingest/types";
 
 export const DEMO_CLIENTS: ClientMonthRow[] = [
   // 2026-05
@@ -47,12 +41,3 @@ export const DEMO_ACTIVITY: AgentActivity[] = [
   { manager_email: "mahya", calls: 60, talk_min: 300, messages: 90, avg_response_min: 20, clients_covered: 8, assigned_clients: 10, conduct: 1.0, impede_flag: 0 },
   { manager_email: "armin", calls: 80, talk_min: 400, messages: 120, avg_response_min: 15, clients_covered: 17, assigned_clients: 20, conduct: 1.0, impede_flag: 1 },
 ];
-
-/** Golden settings — payout 10%, hold 40%, outcome 65%, impede penalty 50%. */
-export const DEMO_SETTINGS: EngineSettings = {
-  payout_rate: 10,
-  hold_pct: 40,
-  outcome_weight: 65,
-  impede_penalty: 50,
-  status: "UNAPPROVED",
-};
