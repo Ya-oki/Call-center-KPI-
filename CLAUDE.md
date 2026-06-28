@@ -13,9 +13,10 @@
 ## Build phases (work in this order — BUILD_SPEC §13)
 
 - **P0 — Scaffold** ✅ Next.js + TS + tooling, repo structure, CLAUDE.md, CI, canonical `schema.sql`, config placeholders. (No reward math yet.)
-- **P1 — Engine first** ✅ pure `score.ts` + `score.test.ts` green (14 tests).
-  - ECONOMICS supersede the prototype: value metric = `net_deposit` (deposit − withdrawal, may be negative, not floored at agent level; pool floored at desk level), attribution = point-in-time `manager_email`, both indices MIN-MAX normalized, UNAPPROVED settings ⇒ `authorized:false` + PROVISIONAL disclaimer.
-  - Golden numbers locked: `netDeskValue = 34,000` · `pool = 3,400` · ranking `lida > hossein > lara > mahya > armin` · payouts `1331.68 / 943.69 / 768.44 / 294.43 / 61.76` · `armin conductFinal = 0.50`. Fixture: `tests/fixtures/demo_netdeposit.ts` (SYNTHETIC).
+- **P1 — Engine** ✅ pure `score.ts` + `score.test.ts` green.
+  - **v2 corrected retention model** (supersedes the v1 pool model): per-agent monthly bonus = `(final/100) × CEILING_PCT% × salary`, from four target-based, capped pillars — capital/40, retention/30, engagement/15, activity/15 — summing to `raw_score` (0..100), then gated by `conduct_multiplier` ∈ [0,1]. No pool, no cross-agent normalization. All dials in `lib/config/defaults.ts` (`TARGET_CAPITAL 150000`, `TARGET_ENGAGE 50`, `TARGET_ACTIVITY 100`, `CEILING_PCT 15`, weights). UNAPPROVED ⇒ `authorized:false` + PROVISIONAL disclaimer.
+  - Golden (fixture `tests/fixtures/demoData.ts`, SYNTHETIC): bonuses `Lida 230.10 · Radin 229.95 · Lara 182.09 · Mahya 112.37 · Ali 53.72`; total cost `808.25` of max `1117.50`; Ali conduct-gated ×0.50.
+  - Engine I/O changed: inputs are per-agent monthly metrics (`AgentMonthInput`). Legacy ingestion shapes moved to `lib/ingest/types.ts`; the P2 DB ingestion path is decoupled from the engine pending a v2 feed reconciliation.
 - **P2 — DB + ingestion** ✅ `schema.sql` reconciled to the engine's vocabulary (`net_deposit` / `manager_email`); CSV parse + validate (per-row error report, negatives allowed), idempotent upsert on PKs, agent auto-create + seed, audit row per upload. Integration test (pg-mem, real DDL + SQL) proves the DB path reproduces the golden block. 22 tests green.
 - **P3-lite — Demo dashboard** ✅ read-only `/overview` server component: fixture → `computeScope` → executive table, PROVISIONAL banner while UNAPPROVED. No DB/auth/writes. Tailwind. Vercel-ready, zero env (`DEPLOY.md`).
 - **P3 — Auth + dashboards:** roles, RLS, the six manager views + `/me`, recompute wiring.

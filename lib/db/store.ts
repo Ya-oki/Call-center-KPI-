@@ -8,7 +8,7 @@
  * engine, never the reverse.
  */
 
-import type { AgentActivity, ClientMonthRow, ClientStatus } from "@/lib/engine/types";
+import type { AgentActivity, ClientMonthRow, ClientStatus } from "@/lib/ingest/types";
 import {
   INSERT_AUDIT,
   SELECT_ACTIVITY_AGGREGATED,
