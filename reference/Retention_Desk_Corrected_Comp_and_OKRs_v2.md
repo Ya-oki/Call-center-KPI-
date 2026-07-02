@@ -1,3 +1,5 @@
+> **Superseded by Retention_Desk_MASTER_SOT_v3.md — kept for audit trail.**
+
 # Retention Desk — Corrected Compensation Model \+ OKRs (v2)
 
 **Prepared for:** TJ (CEO), Yasi (COO) **Scope:** Retention account managers only (IB and conversion teams excluded — separate systems). **Core rule:** The bonus is a **percentage added to salary**, never a share of revenue. Cost is bounded at `salary × ceiling%`. **Status:** PROVISIONAL — not an authorized payout. Final numbers require Ares's Feb–June CRM export and TJ's sign-off on the ceiling %.
