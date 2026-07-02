@@ -1,0 +1,18 @@
+Manager,Month,Active Clients (Start of Month),Active Clients (End of Month),Churned Clients,Reactivated Clients,Redeposit Clients,Conduct/Complaint Flags,Notes
+Lida,Feb,643,830,170,357,324,3,Active-start baseline = Jan activity
+Lida,Mar,830,361,519,50,47,0,
+Lida,Apr,361,724,119,482,171,0,
+Lida,May,724,773,321,370,265,0,
+Lida,Jun,773,1044,234,505,422,3,
+,,,,,,,,
+Radin,Feb,619,765,149,295,289,0,Active-start baseline = Jan activity
+Radin,Mar,765,333,488,56,45,0,
+Radin,Apr,333,662,124,453,155,0,
+Radin,May,662,726,300,364,241,0,
+Radin,Jun,726,973,228,475,413,0,
+,,,,,,,,
+Lara,Feb,657,792,178,313,307,0,Active-start baseline = Jan activity
+Lara,Mar,792,329,506,43,48,0,
+Lara,Apr,329,688,119,478,155,0,
+Lara,May,688,750,305,367,292,0,
+Lara,Jun,750,997,219,466,419,0,
