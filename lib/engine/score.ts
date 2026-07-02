@@ -28,6 +28,8 @@ import type {
   AgentMonthInput,
   AgentResult,
   BackPayResult,
+  ConcentrationInfo,
+  ConductSeverity,
   EngineSettings,
   MonthScore,
   ScopeResult,
@@ -55,14 +57,42 @@ export function progressiveBonusPct(
   return capPct * ((score - floor) / (100 - floor)) ** curveP;
 }
 
-/** Pure per-month pillar + final scoring (formula structure unchanged). */
+/** Substantiated agent-conduct severity → multiplier (SOT §10). */
+function severityMultiplier(sev: ConductSeverity): number {
+  if (sev === "minor") return 0.9;
+  if (sev === "major") return 0.5;
+  return 0.0; // severe
+}
+
+/**
+ * Pure per-month pillar + final scoring. Formula STRUCTURE unchanged. H2 behaviour
+ * (concentration cap, book-risk flag, conduct pipeline) is gated by settings flags
+ * that default OFF — with them off and no H2 feeds, output is bit-identical to H1.
+ */
 export function scoreMonth(m: AgentMonthInput, settings: EngineSettings): MonthScore {
   const W = settings.WEIGHTS;
+
+  // ── Capital pillar input: aggregate (default) or per-client concentration-capped ──
+  const hasClientCapital = Array.isArray(m.client_capital) && m.client_capital.length > 0;
+  const concEnabled = settings.concentration_cap_enabled ?? false;
+  const concCapPct = settings.CONC_CAP_PCT ?? 0.25;
+  let concentration: ConcentrationInfo | null = null;
+  let capitalBase = m.retained_capital; // aggregate path — bit-identical to H1 when unused
+  if (hasClientCapital && m.client_capital) {
+    const cap = concCapPct * settings.TARGET_CAPITAL;
+    const rawSum = m.client_capital.reduce((s, c) => s + Math.max(0, c.net_deposit), 0);
+    const cappedSum = m.client_capital.reduce(
+      (s, c) => s + Math.min(Math.max(0, c.net_deposit), cap),
+      0,
+    );
+    concentration = { applied: concEnabled, rawCapitalInput: rawSum, cappedCapitalInput: cappedSum };
+    if (concEnabled) capitalBase = cappedSum;
+  }
 
   const capital = clamp(
     0,
     W.capital,
-    (Math.max(0, m.retained_capital) / settings.TARGET_CAPITAL) * W.capital,
+    (Math.max(0, capitalBase) / settings.TARGET_CAPITAL) * W.capital,
   );
   const retentionRatio =
     m.clients_start > 0 ? m.active_clients_end / m.clients_start : 0;
@@ -92,7 +122,35 @@ export function scoreMonth(m: AgentMonthInput, settings: EngineSettings): MonthS
     rawScore = capital + retention + engagement + activity;
   }
 
-  const finalScore = rawScore * m.conduct_multiplier;
+  // ── Book-risk flag: VISIBILITY ONLY, never affects the score (SOT §7) ──
+  let bookRiskFlag = false;
+  if (hasClientCapital && m.client_capital) {
+    const threshold = settings.RISK_FLAG_THRESHOLD ?? -0.5;
+    const sumPl = m.client_capital.reduce((s, c) => s + c.floating_pl, 0);
+    const sumNd = m.client_capital.reduce((s, c) => s + c.net_deposit, 0);
+    if (sumNd > 0 && sumPl < threshold * sumNd) bookRiskFlag = true;
+  }
+
+  // ── Conduct multiplier: input value (H1) or the flag pipeline (H2) ──
+  const reviewBadges: string[] = [];
+  if (bookRiskFlag) reviewBadges.push("book_risk_review");
+  let conductMult = m.conduct_multiplier;
+  let conductSource: "input" | "pipeline" = "input";
+  if (settings.conduct_pipeline_enabled ?? false) {
+    conductSource = "pipeline";
+    const flags = m.conduct_flags ?? [];
+    const substantiatedAgent = flags
+      .filter((f) => f.type === "agent_conduct" && f.substantiated)
+      .map((f) => severityMultiplier(f.severity));
+    // Worst single multiplier (min) — never multiply flags together.
+    conductMult = substantiatedAgent.length > 0 ? Math.min(...substantiatedAgent) : 1.0;
+    for (const f of flags) {
+      if (f.type === "client_platform") reviewBadges.push("client_platform_complaint");
+      else if (f.type === "agent_conduct" && !f.substantiated) reviewBadges.push("unsubstantiated_conduct");
+    }
+  }
+
+  const finalScore = rawScore * conductMult;
 
   return {
     month: m.month,
@@ -100,6 +158,11 @@ export function scoreMonth(m: AgentMonthInput, settings: EngineSettings): MonthS
     raw_score: rawScore,
     final_score: finalScore,
     redistributed: redistribute,
+    conduct_multiplier_effective: conductMult,
+    concentration,
+    book_risk_flag: bookRiskFlag,
+    review_badges: reviewBadges,
+    conduct_source: conductSource,
   };
 }
 
@@ -139,6 +202,11 @@ export function computeScope(
       monthly_bonus: bonus,
       bonus_pct_salary: m.monthly_salary > 0 ? bonus / m.monthly_salary : 0,
       rank: 0,
+      conduct_multiplier_effective: s.conduct_multiplier_effective,
+      concentration: s.concentration,
+      book_risk_flag: s.book_risk_flag,
+      review_badges: s.review_badges,
+      conduct_source: s.conduct_source,
     };
   });
 
@@ -162,6 +230,7 @@ export function computeScope(
     mode: settings.mode,
     authorized,
     disclaimer: authorized ? null : PROVISIONAL_DISCLAIMER,
+    payout_authorized: settings.payout_authorized ?? false,
   };
 }
 

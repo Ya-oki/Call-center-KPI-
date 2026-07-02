@@ -30,6 +30,13 @@ export const DEFAULT_ENGINE_SETTINGS: EngineSettings = {
   mode: "forward_progressive",
   redistribute_service_activity: true, // stays redistributed through H2 until a unified feed (SOT §9)
   status: "UNAPPROVED",
+
+  // ── H2 flags — all default OFF (score-affecting behaviour is opt-in) ──
+  payout_authorized: false, // CEO sign-off gate (cap % + curve); false ⇒ PREVIEW on /h2
+  concentration_cap_enabled: false, // SOT §7 per-client cap; off ⇒ aggregate path (bit-identical)
+  CONC_CAP_PCT: 0.25, // single-client cap as a fraction of TARGET_CAPITAL (frozen per quarter)
+  RISK_FLAG_THRESHOLD: -0.5, // book-risk flag: Σfloating_pl < −0.5·Σnet_deposit (visibility only)
+  conduct_pipeline_enabled: false, // SOT §10 flag pipeline → multiplier; off ⇒ input conduct used
 };
 
 /** H1 back-pay: placeholder targets (by design), linear mapping, D redistributed. */
@@ -49,3 +56,15 @@ export const BACKPAY_MONTHS_MULTIPLIER = 6;
 
 /** H2 ceiling options TJ is choosing between (SOT §8). */
 export const CAP_PCT_OPTIONS = [0.2, 0.25] as const;
+
+/** H2 curve options the CEO chooses between (SOT §8): p=1.5 steeper, p=1.25 gentler. */
+export const CURVE_P_OPTIONS = [1.5, 1.25] as const;
+
+/**
+ * H2-forward "live-ready" settings — the forward profile with the CEO gate still
+ * closed. Distinct object so /h2 never accidentally reuses the H1 back-pay dials.
+ */
+export const H2_FORWARD_SETTINGS = {
+  ...DEFAULT_ENGINE_SETTINGS,
+  mode: "forward_progressive" as const,
+};
